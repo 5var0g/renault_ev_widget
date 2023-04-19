@@ -20,9 +20,9 @@ The widget is updated every 30min or when clicked anywhere on it.
 
 ## Screenshots
 
-![Unpluged Status](/img/unpluged.jpg)
+![Unplugged Status](/img/unplugged.jpg)
 
-![Plugged in Status](/img/unpluged.jpg)
+![Plugged Status](/img/plugged.jpg)
 
 ## License
 Distributed under the terms of the [MIT](https://choosealicense.com/licenses/mit/) license, Renault widget is free and open source software.
