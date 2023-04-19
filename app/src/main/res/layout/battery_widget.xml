@@ -1,0 +1,91 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/widget_layout"
+    style="@style/Widget.Renault_app.AppWidget.Container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/Theme.Renault_app.AppWidgetContainer"
+    android:layout_marginBottom="0dp"
+    android:clickable="true"
+    android:layout_marginRight="2dp">
+
+    <TextView
+        android:id="@+id/appwidget_battery_level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="appwidget_battery_level"
+        android:text="0 %"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold|italic"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/appwidget_battery_autonomy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/appwidget_battery_level"
+        android:layout_marginTop="1dp"
+        android:contentDescription="appwidget_battery_autonomy"
+        android:text="0 km"
+        android:textColor="@color/white"
+        android:textSize="24sp"
+        android:textStyle="bold|italic"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/appwidget_battery_charging_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/appwidget_battery_autonomy"
+        android:layout_alignStart="@+id/appwidget_battery_autonomy"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="1dp"
+        android:contentDescription="appwidget_battery_charging_status"
+        android:text="Charging"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:textStyle="bold|italic"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/appwidget_battery_charging_stat"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/appwidget_battery_charging_status"
+        android:layout_alignStart="@+id/appwidget_battery_level"
+        android:layout_marginStart="0dp"
+        android:layout_marginTop="1dp"
+        android:contentDescription="appwidget_battery_charging_stat"
+        android:text="0 min / 0 kW"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:textStyle="bold|italic"
+        android:visibility="gone"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/appwidget_timestamp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="12dp"
+        android:contentDescription="appwidget_timestamp"
+        android:text=""
+        android:textColor="#4E4E4E"
+        android:textSize="10sp"
+        android:layout_marginLeft="15dp"/>
+
+    <ImageView
+        android:id="@+id/refresh"
+        android:layout_width="25dp"
+        android:layout_height="25dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="4dp"
+        android:layout_marginRight="4dp"
+        android:src="@drawable/ic_stat_name" >
+
+    </ImageView>
+</RelativeLayout>
