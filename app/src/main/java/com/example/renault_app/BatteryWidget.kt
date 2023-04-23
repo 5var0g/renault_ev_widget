@@ -59,8 +59,17 @@ class BatteryWidget : AppWidgetProvider() {
             views.setTextViewText(R.id.appwidget_battery_charging_status, plugStatus(plugStatus, chargingStatus))
             views.setTextViewText(R.id.appwidget_timestamp, "$timestampShort / $updated")
 
-            if (batteryLevel <= 10) views.setTextColor(R.id.appwidget_battery_level, Color.RED)
-            else if(batteryLevel <= 20) views.setTextColor(R.id.appwidget_battery_level, Color.parseColor("#FFA500"))
+            if(batteryLevel.toIntOrNull() != null) {
+                if (batteryLevel.toInt() <= 10) views.setTextColor(
+                    R.id.appwidget_battery_level,
+                    Color.RED
+                )
+                else if (batteryLevel.toInt() <= 20) views.setTextColor(
+                    R.id.appwidget_battery_level,
+                    Color.parseColor("#FFA500")
+                )
+                else views.setTextColor(R.id.appwidget_battery_level, Color.WHITE)
+            }
             else views.setTextColor(R.id.appwidget_battery_level, Color.WHITE)
 
             if(chargingStatus == "1.0")views.setViewVisibility(R.id.appwidget_battery_charging_stat,View.VISIBLE)

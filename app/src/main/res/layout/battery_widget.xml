@@ -14,7 +14,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="appwidget_battery_level"
-        android:text="0 %"
+        android:text="- %"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold|italic"
@@ -28,7 +28,7 @@
         android:layout_below="@+id/appwidget_battery_level"
         android:layout_marginTop="1dp"
         android:contentDescription="appwidget_battery_autonomy"
-        android:text="0 km"
+        android:text="- km"
         android:textColor="@color/white"
         android:textSize="24sp"
         android:textStyle="bold|italic"
@@ -70,12 +70,12 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_marginLeft="15dp"
         android:layout_marginBottom="12dp"
         android:contentDescription="appwidget_timestamp"
-        android:text=""
+        android:text="--:--.--. / --:--"
         android:textColor="#4E4E4E"
-        android:textSize="10sp"
-        android:layout_marginLeft="15dp"/>
+        android:textSize="10sp" />
 
     <ImageView
         android:id="@+id/refresh"

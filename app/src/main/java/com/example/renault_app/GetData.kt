@@ -1,6 +1,7 @@
 package com.example.renault_app
 
 import android.content.Context
+import android.util.Log
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -10,14 +11,13 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 
-var updated = ""
-var batteryLevel = 0
-var batteryAutonomy = 0
+var updated = "--:--"
+var batteryLevel = "--"
+var batteryAutonomy = "--"
 var plugStatus = "0"
 var chargingStatus = "0"
 var timestamp = ""
-var timestampShort = ""
-var timestampLong = ""
+var timestampShort = "--:-- --.--."
 var chargingRemainingTime = 0
 var chargingInstantaneousPower = 0
 var nextTimeRunAllowed: Long = 0
@@ -44,6 +44,8 @@ fun getRenaultData(context: Context) {
     val tsLong = System.currentTimeMillis() / 1000
 
     if(tsLong > nextTimeRunAllowed) {
+        updated = getCurrentTime()
+
         val sharedPreferences = context.getSharedPreferences("credentials", 0)
         if(!sharedPreferences.getBoolean("connected", false))return
 
@@ -57,9 +59,9 @@ fun getRenaultData(context: Context) {
             val apiResponse = module.callAttr("get_stat", sharedPreferences.getString("userName", ""), sharedPreferences.getString("password", ""), sharedPreferences.getString("accountId", ""), sharedPreferences.getString("vin", "")).toString()
 
             val jObject = JSONObject("{$apiResponse}")
-            updated = jObject.getString("updated")
-            batteryLevel = jObject.getInt("batteryLevel")
-            batteryAutonomy = jObject.getInt("batteryAutonomy")
+
+            batteryLevel = jObject.getInt("batteryLevel").toString()
+            batteryAutonomy = jObject.getInt("batteryAutonomy").toString()
             plugStatus = jObject.getString("plugStatus")
             chargingStatus = jObject.getString("chargingStatus")
             timestamp = jObject.getString("timestamp")
@@ -67,7 +69,6 @@ fun getRenaultData(context: Context) {
             chargingInstantaneousPower = jObject.getInt("chargingInstantaneousPower")
 
             timestamp = timestamp.replace("T", " ")
-            timestampLong = formatDateFromString("HH:mm dd.MM.yyyy", timestamp)
             timestampShort = formatDateFromString("HH:mm dd.MM.", timestamp)
 
         } catch (e: PyException){
@@ -126,4 +127,10 @@ private fun formatDateFromString(outputFormat: String?, inputDate: String?): Str
         } catch (e: ParseException) {
         }
         return outputDate
+}
+
+private fun getCurrentTime(): String {
+    val format = SimpleDateFormat("HH:mm")
+
+    return format.format(Date())
 }
