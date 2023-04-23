@@ -1,7 +1,6 @@
 package com.example.renault_app
 
 import android.content.Context
-import android.util.Log
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -59,9 +58,8 @@ fun getRenaultData(context: Context) {
             val apiResponse = module.callAttr("get_stat", sharedPreferences.getString("userName", ""), sharedPreferences.getString("password", ""), sharedPreferences.getString("accountId", ""), sharedPreferences.getString("vin", "")).toString()
 
             val jObject = JSONObject("{$apiResponse}")
-
-            batteryLevel = jObject.getInt("batteryLevel").toString()
-            batteryAutonomy = jObject.getInt("batteryAutonomy").toString()
+            batteryLevel = jObject.getString("batteryLevel")
+            batteryAutonomy = jObject.getString("batteryAutonomy")
             plugStatus = jObject.getString("plugStatus")
             chargingStatus = jObject.getString("chargingStatus")
             timestamp = jObject.getString("timestamp")
