@@ -64,7 +64,13 @@ fun getRenaultData(context: Context) {
             chargingStatus = jObject.getString("chargingStatus")
             timestamp = jObject.getString("timestamp")
             chargingRemainingTime = jObject.getInt("chargingRemainingTime")
-            chargingInstantaneousPower = jObject.getInt("chargingInstantaneousPower")
+
+            try {
+                chargingInstantaneousPower = jObject.getInt("chargingInstantaneousPower")
+            }
+            catch (e: Exception) {
+                chargingInstantaneousPower = 0
+            }
 
             timestamp = timestamp.replace("T", " ")
             timestampShort = formatDateFromString("HH:mm dd.MM.", timestamp)
