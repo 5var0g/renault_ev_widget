@@ -1,5 +1,4 @@
 """Kamereon exceptions."""
-from typing import Optional
 
 from renault_api.exceptions import RenaultException
 
@@ -13,7 +12,7 @@ class KamereonException(RenaultException):
 class KamereonResponseException(KamereonException):
     """Kamereon returned a parsable errors."""
 
-    def __init__(self, error_code: Optional[str], error_details: Optional[str]):
+    def __init__(self, error_code: str | None, error_details: str | None):
         """Initialise KamereonResponseException."""
         self.error_code = error_code
         self.error_details = error_details
@@ -57,5 +56,23 @@ class ResourceNotFoundException(KamereonResponseException):
 
 class FailedForwardException(KamereonResponseException):
     """Failed to forward request to remote service."""
+
+    pass
+
+
+class PrivacyModeOnException(KamereonResponseException):
+    """Privacy mode currently ON."""
+
+    pass
+
+
+class ChargeModeInProgressException(KamereonResponseException):
+    """Charge mode change in progress."""
+
+    pass
+
+
+class ForbiddenException(KamereonResponseException):
+    """The access is forbidden."""
 
     pass

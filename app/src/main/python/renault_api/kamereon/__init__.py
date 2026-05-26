@@ -1,11 +1,9 @@
 """Kamereon API."""
+
 import logging
 from json import dumps as json_dumps
 from typing import Any
 from typing import cast
-from typing import Dict
-from typing import List
-from typing import Optional
 from warnings import warn
 
 import aiohttp
@@ -15,18 +13,17 @@ from . import models
 from . import schemas
 from .exceptions import KamereonResponseException
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
-_KCA_GET_ENDPOINTS: Dict[str, Any] = {
+_KCA_GET_ENDPOINTS: dict[str, Any] = {
     "": {"version": 2},
     "battery-status": {"version": 2},
     "charge-history": {"version": 1},
     "charge-mode": {"version": 1},
     "charges": {"version": 1},
     "charging-settings": {"version": 1},
-    "cockpit": {"version": 2},
+    "cockpit": {"version": 1},
     "hvac-history": {"version": 1},
     "hvac-sessions": {"version": 1},
     "hvac-status": {"version": 1},
@@ -34,22 +31,25 @@ _KCA_GET_ENDPOINTS: Dict[str, Any] = {
     "location": {"version": 1},
     "lock-status": {"version": 1},
     "notification-settings": {"version": 1},
+    "pressure": {"version": 1},
     "res-state": {"version": 1},
 }
-_KCA_POST_ENDPOINTS: Dict[str, Any] = {
+_KCA_POST_ENDPOINTS: dict[str, Any] = {
     "actions/charge-mode": {"version": 1, "type": "ChargeMode"},
     "actions/charge-schedule": {"version": 2, "type": "ChargeSchedule"},
     "actions/charging-start": {"version": 1, "type": "ChargingStart"},
     "actions/hvac-schedule": {"version": 2, "type": "HvacSchedule"},
     "actions/hvac-start": {"version": 1, "type": "HvacStart"},
 }
-_KCM_POST_ENDPOINTS: Dict[str, Any] = {
+_KCM_POST_ENDPOINTS: dict[str, Any] = {
     "charge/pause-resume": {"version": 1, "type": "ChargePauseResume"},
 }
 
 # Deprecated from 0.1.8 - kept for compatibility
 DATA_ENDPOINTS = _KCA_GET_ENDPOINTS
 ACTION_ENDPOINTS = _KCA_POST_ENDPOINTS
+
+ACCOUNT_ENDPOINT_ROOT = "/commerce/v1/accounts/{account_id}/kamereon"
 
 
 def get_commerce_url(root_url: str) -> str:
@@ -83,35 +83,17 @@ def get_contracts_url(root_url: str, account_id: str, vin: str) -> str:
     return f"{account_url}/vehicles/{vin}/contracts"
 
 
-def get_required_contracts(endpoint: str) -> str:  # pragma: no cover
-    """Get the required contracts for the specified endpoint."""
-    # "Deprecated in 0.1.3, contract codes are country-specific"
-    # " and can't be used to guess requirements."
-    warn("This method is deprecated.", DeprecationWarning, stacklevel=2)
-    return ""
-
-
-def has_required_contracts(
-    contracts: List[models.KamereonVehicleContract], endpoint: str
-) -> bool:
-    """Check if vehicle has contract for endpoint."""
-    # "Deprecated in 0.1.3, contract codes are country-specific"
-    # " and can't be used to guess requirements."
-    warn("This method is deprecated.", DeprecationWarning, stacklevel=2)
-    return True  # pragma: no cover
-
-
 async def request(
     websession: aiohttp.ClientSession,
     method: str,
     url: str,
     api_key: str,
     gigya_jwt: str,
-    params: Dict[str, str],
-    json: Optional[Dict[str, Any]] = None,
-    schema: Optional[Schema] = None,
+    params: dict[str, str],
+    json: dict[str, Any] | None = None,
+    schema: Schema | None = None,
     *,
-    wrap_array_in: Optional[str] = None,
+    wrap_array_in: str | None = None,
 ) -> models.KamereonResponse:
     """Process Kamereon HTTP request."""
     schema = schema or schemas.KamereonResponseSchema
@@ -283,8 +265,8 @@ async def get_vehicle_data(
     account_id: str,
     vin: str,
     endpoint: str,
-    endpoint_version: Optional[int] = None,
-    params: Optional[Dict[str, str]] = None,
+    endpoint_version: int | None = None,
+    params: dict[str, str] | None = None,
     *,
     adapter_type: str = "kca",
 ) -> models.KamereonVehicleDataResponse:
@@ -323,9 +305,9 @@ async def set_vehicle_action(
     account_id: str,
     vin: str,
     endpoint: str,
-    attributes: Dict[str, Any],
-    endpoint_version: Optional[int] = None,
-    data_type: Optional[Dict[str, Any]] = None,
+    attributes: dict[str, Any],
+    endpoint_version: int | None = None,
+    data_type: dict[str, Any] | None = None,
     *,
     adapter_type: str = "kca",
 ) -> models.KamereonVehicleDataResponse:

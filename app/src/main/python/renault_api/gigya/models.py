@@ -1,14 +1,12 @@
 """Gigya models."""
+
 from dataclasses import dataclass
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
 
 from . import exceptions
 from renault_api.models import BaseModel
 
-COMMON_ERRRORS: List[Dict[str, Any]] = [
+COMMON_ERRRORS: list[dict[str, Any]] = [
     {
         "errorCode": 403042,
         "error_type": exceptions.InvalidCredentialsException,
@@ -21,7 +19,7 @@ class GigyaResponse(BaseModel):
     """Gigya response."""
 
     errorCode: int
-    errorDetails: Optional[str]
+    errorDetails: str | None
 
     def raise_for_error_code(self) -> None:
         """Checks the response information."""
@@ -37,20 +35,20 @@ class GigyaResponse(BaseModel):
 class GigyaLoginSessionInfo(BaseModel):
     """Gigya Login sessionInfo details."""
 
-    cookieValue: Optional[str]
+    cookieValue: str | None
 
 
 @dataclass
 class GigyaLoginResponse(GigyaResponse):
     """Gigya response to POST on /accounts.login."""
 
-    sessionInfo: Optional[GigyaLoginSessionInfo]
+    sessionInfo: GigyaLoginSessionInfo | None
 
     def get_session_cookie(self) -> str:
         """Return cookie value from session information."""
-        if not self.sessionInfo:  # pragma: no cover
+        if not self.sessionInfo:
             raise exceptions.GigyaException("`sessionInfo` is None in Login response.")
-        if not self.sessionInfo.cookieValue:  # pragma: no cover
+        if not self.sessionInfo.cookieValue:
             raise exceptions.GigyaException(
                 "`sessionInfo.cookieValue` is None in Login response."
             )
@@ -61,22 +59,22 @@ class GigyaLoginResponse(GigyaResponse):
 class GigyaGetAccountInfoData(BaseModel):
     """Gigya GetAccountInfo data details."""
 
-    personId: Optional[str]
+    personId: str | None
 
 
 @dataclass
 class GigyaGetAccountInfoResponse(GigyaResponse):
     """Gigya response to POST on /accounts.getAccountInfo."""
 
-    data: Optional[GigyaGetAccountInfoData]
+    data: GigyaGetAccountInfoData | None
 
     def get_person_id(self) -> str:
         """Return person id."""
-        if not self.data:  # pragma: no cover
+        if not self.data:
             raise exceptions.GigyaException(
                 "`data` is None in GetAccountInfo response."
             )
-        if not self.data.personId:  # pragma: no cover
+        if not self.data.personId:
             raise exceptions.GigyaException(
                 "`data.personId` is None in GetAccountInfo response."
             )
@@ -87,10 +85,10 @@ class GigyaGetAccountInfoResponse(GigyaResponse):
 class GigyaGetJWTResponse(GigyaResponse):
     """Gigya response to POST on /accounts.getJWT."""
 
-    id_token: Optional[str]
+    id_token: str | None
 
     def get_jwt(self) -> str:
         """Return jwt token."""
-        if not self.id_token:  # pragma: no cover
+        if not self.id_token:
             raise exceptions.GigyaException("`id_token` is None in GetJWT response.")
         return self.id_token

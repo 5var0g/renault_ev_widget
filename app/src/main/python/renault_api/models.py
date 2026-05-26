@@ -1,7 +1,7 @@
 """Models for Renault API."""
+
 from dataclasses import dataclass
 from typing import Any
-from typing import Dict
 
 import marshmallow
 
@@ -10,7 +10,7 @@ import marshmallow
 class BaseModel:
     """Base model for Gigya and Kamereon models to include raw_data."""
 
-    raw_data: Dict[str, Any]
+    raw_data: dict[str, Any]
 
 
 class BaseSchema(marshmallow.Schema):

@@ -1,9 +1,7 @@
 """Kamereon client for interaction with Renault servers."""
+
 import json
 import os
-from typing import Dict
-from typing import List
-from typing import Optional
 
 import jwt
 
@@ -17,7 +15,7 @@ class CredentialStore:
 
     def __init__(self) -> None:
         """Initialise the credential store."""
-        self._store: Dict[str, Credential] = {}
+        self._store: dict[str, Credential] = {}
 
     def __getitem__(self, name: str) -> Credential:
         """Get a credential the credential store."""
@@ -27,7 +25,7 @@ class CredentialStore:
                 return cred
         raise KeyError(name)
 
-    def get(self, name: str) -> Optional[Credential]:
+    def get(self, name: str) -> Credential | None:
         """Get a credential the credential store."""
         if name in list(self._store.keys()):
             cred = self._store[name]
@@ -35,7 +33,7 @@ class CredentialStore:
                 return cred
         return None
 
-    def get_value(self, name: str) -> Optional[str]:
+    def get_value(self, name: str) -> str | None:
         """Get a credential value from the credential store."""
         if name in list(self._store.keys()):
             cred = self._store[name]
@@ -50,9 +48,9 @@ class CredentialStore:
 
     def __setitem__(self, name: str, value: Credential) -> None:
         """Add a credential to the credential store."""
-        if not isinstance(name, str):  # pragma: no cover
+        if not isinstance(name, str):
             raise TypeError("`name` must be a string")
-        if not isinstance(value, Credential):  # pragma: no cover
+        if not isinstance(value, Credential):
             raise TypeError("`value` must be a Credential")
 
         self._store[name] = value
@@ -77,7 +75,7 @@ class CredentialStore:
                 del self._store[key]
         self._write()
 
-    def clear_keys(self, to_delete: List[str]) -> None:
+    def clear_keys(self, to_delete: list[str]) -> None:
         """Remove specified keys from credential store."""
         for key in list(self._store.keys()):
             if key in to_delete:
@@ -88,9 +86,9 @@ class CredentialStore:
 class CredentialEncoder(json.JSONEncoder):
     """Custom encoder for Credential class."""
 
-    def default(self, obj: Credential) -> str:
+    def default(self, o: Credential) -> str:
         """Store the value."""
-        return obj.value
+        return o.value
 
 
 class FileCredentialStore(CredentialStore):
@@ -112,7 +110,7 @@ class FileCredentialStore(CredentialStore):
                 if key == "gigya_jwt":
                     try:
                         self[key] = JWTCredential(value)
-                    except jwt.ExpiredSignatureError:  # pragma: no cover
+                    except jwt.ExpiredSignatureError:
                         pass
                 else:
                     self[key] = Credential(value)

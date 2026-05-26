@@ -1,8 +1,6 @@
 """Client for Renault API."""
+
 import logging
-from typing import Dict
-from typing import List
-from typing import Optional
 
 import aiohttp
 
@@ -12,7 +10,6 @@ from .kamereon import models
 from .renault_account import RenaultAccount
 from .renault_session import RenaultSession
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,18 +18,18 @@ class RenaultClient:
 
     def __init__(
         self,
-        session: Optional[RenaultSession] = None,
-        websession: Optional[aiohttp.ClientSession] = None,
-        locale: Optional[str] = None,
-        country: Optional[str] = None,
-        locale_details: Optional[Dict[str, str]] = None,
-        credential_store: Optional[CredentialStore] = None,
+        session: RenaultSession | None = None,
+        websession: aiohttp.ClientSession | None = None,
+        locale: str | None = None,
+        country: str | None = None,
+        locale_details: dict[str, str] | None = None,
+        credential_store: CredentialStore | None = None,
     ) -> None:
         """Initialise Renault client."""
         if session:
             self._session = session
         else:
-            if websession is None:  # pragma: no cover
+            if websession is None:
                 raise RenaultException(
                     "`websession` is required if session is not provided."
                 )
@@ -53,14 +50,14 @@ class RenaultClient:
         """GET to /persons/{person_id}."""
         return await self.session.get_person()
 
-    async def get_api_accounts(self) -> List[RenaultAccount]:
+    async def get_api_accounts(self) -> list[RenaultAccount]:
         """Get account proxies."""
         response = await self.get_person()
-        if response.accounts is None:  # pragma: no cover
+        if response.accounts is None:
             raise ValueError("response.accounts is None")
-        result: List[RenaultAccount] = []
+        result: list[RenaultAccount] = []
         for account in response.accounts:
-            if account.accountId is None:  # pragma: no cover
+            if account.accountId is None:
                 continue
             result.append(
                 RenaultAccount(account_id=account.accountId, session=self.session)

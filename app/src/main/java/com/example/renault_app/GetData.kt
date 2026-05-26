@@ -2,6 +2,7 @@ package com.example.renault_app
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
@@ -56,7 +57,8 @@ fun getRenaultData(context: Context) {
         val module = py.getModule("getStat")
 
         try {
-            val apiResponse = module.callAttr("get_stat", sharedPreferences.getString("userName", ""), sharedPreferences.getString("password", ""), sharedPreferences.getString("accountId", ""), sharedPreferences.getString("vin", "")).toString()
+            val apiResponse = module.callAttr("get_stat",sharedPreferences.getString("token",""), sharedPreferences.getString("renaultId", ""), sharedPreferences.getString("vin", "")).toString()
+            Log.e("testis", apiResponse)
 
             val jObject = JSONObject("{$apiResponse}")
             batteryLevel = jObject.getString("batteryLevel")
@@ -65,6 +67,8 @@ fun getRenaultData(context: Context) {
             chargingStatus = jObject.getString("chargingStatus")
             timestamp = jObject.getString("timestamp")
             chargingRemainingTime = jObject.getInt("chargingRemainingTime")
+
+            Log.e("testis", jObject.getString("batteryLevel"))
 
             chargingInstantaneousPower = try {
                 jObject.getInt("chargingInstantaneousPower")
@@ -76,6 +80,7 @@ fun getRenaultData(context: Context) {
             timestampShort = formatDateFromString(timestamp)
 
         } catch (e: PyException){
+            Log.e("testis", e.toString())
             e.printStackTrace()
         }
 
@@ -83,7 +88,7 @@ fun getRenaultData(context: Context) {
     }
 }
 
-fun connectRenault(context: Context, username: String, password: String): String {
+fun connectRenault(context: Context, username: String?, password: String?): String {
     if (!Python.isStarted()) {
         Python.start(AndroidPlatform(context))
     }
@@ -91,7 +96,7 @@ fun connectRenault(context: Context, username: String, password: String): String
     val module = py.getModule("getStat")
 
     try {
-        return module.callAttr("get_key", username, password).toString()
+        return module.callAttr("login", username, password).toString()
     } catch (e: PyException) {
         e.printStackTrace()
     }
@@ -99,7 +104,7 @@ fun connectRenault(context: Context, username: String, password: String): String
     return "err"
 }
 
-fun getVehicles(context: Context, username: String, password: String, accountId: String): String {
+fun getVehicles(context: Context, username: String, password: String, renaultId: String): String {
     if (!Python.isStarted()) {
         Python.start(AndroidPlatform(context))
     }
@@ -107,7 +112,7 @@ fun getVehicles(context: Context, username: String, password: String, accountId:
     val module = py.getModule("getStat")
 
     try {
-        return module.callAttr("get_vehicles", username, password, accountId).toString()
+        return module.callAttr("get_vehicles", username, password, renaultId).toString()
     } catch (e: PyException) {
         e.printStackTrace()
     }

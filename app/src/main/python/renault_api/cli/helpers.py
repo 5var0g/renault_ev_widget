@@ -1,12 +1,11 @@
 """Helpers for Renault API."""
+
 import asyncio
 import functools
+from collections.abc import Callable
 from datetime import datetime
 from datetime import timedelta
 from typing import Any
-from typing import Callable
-from typing import Optional
-from typing import Tuple
 
 import aiohttp
 import click
@@ -15,7 +14,6 @@ import tzlocal
 
 from renault_api.exceptions import RenaultException
 from renault_api.kamereon.helpers import DAYS_OF_WEEK
-
 
 _DATETIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -28,7 +26,7 @@ def coro_with_websession(func: Callable[..., Any]) -> Callable[..., Any]:
             try:
                 kwargs["websession"] = websession
                 await func(*args, **kwargs)
-            except RenaultException as exc:  # pragma: no cover
+            except RenaultException as exc:
                 raise click.ClickException(str(exc)) from exc
             finally:
                 closed_event = create_aiohttp_closed_event(websession)
@@ -82,7 +80,7 @@ def start_end_option(add_period: bool) -> Callable[..., Any]:
 
 def create_aiohttp_closed_event(
     websession: aiohttp.ClientSession,
-) -> asyncio.Event:  # pragma: no cover
+) -> asyncio.Event:
     """Work around aiohttp issue that doesn't properly close transports on exit.
 
     See https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-639080209
@@ -137,14 +135,14 @@ def create_aiohttp_closed_event(
     return all_is_lost
 
 
-def parse_dates(start: str, end: str) -> Tuple[datetime, datetime]:
+def parse_dates(start: str, end: str) -> tuple[datetime, datetime]:
     """Convert start/end string arguments into datetime arguments."""
     parsed_start = dateparser.parse(start)
     parsed_end = dateparser.parse(end)
 
-    if not parsed_start:  # pragma: no cover
+    if not parsed_start:
         raise ValueError(f"Unable to parse `{start}` into start datetime.")
-    if not parsed_end:  # pragma: no cover
+    if not parsed_end:
         raise ValueError(f"Unable to parse `{end}` into end datetime.")
 
     return (parsed_start, parsed_end)
@@ -155,7 +153,7 @@ def _timezone_offset() -> int:
     utcoffset = tzlocal.get_localzone().utcoffset(datetime.now())
     if utcoffset:
         return int(utcoffset.total_seconds() / 60)
-    return 0  # pragma: no cover
+    return 0
 
 
 def _format_tzdatetime(date_string: str) -> str:
@@ -184,11 +182,11 @@ def _format_seconds(secs: float) -> str:
 
 
 def get_display_value(
-    value: Optional[Any] = None,
-    unit: Optional[str] = None,
+    value: Any | None = None,
+    unit: str | None = None,
 ) -> str:
     """Get a display for value."""
-    if value is None:  # pragma: no cover
+    if value is None:
         return ""
     if unit is None:
         return str(value)

@@ -5,11 +5,13 @@ import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.text.TextUtils
+import android.util.Log
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity() {
@@ -30,6 +32,9 @@ class MainActivity : AppCompatActivity() {
 
         userNameEdt.setText(sharedPreferences.getString("userName", null))
 
+        //getRenaultData(this)
+        Log.e("testis", sharedPreferences.getString("vehicles", "").toString())
+
         if(sharedPreferences.getBoolean("connected", false)){
             button.text = getString(R.string.disconnect)
 
@@ -46,8 +51,8 @@ class MainActivity : AppCompatActivity() {
         button.setOnClickListener {
             if (sharedPreferences.getBoolean("connected", false)) {
                 editor.putString("userName", "")
-                editor.putString("password", "")
-                editor.putString("accountId", "")
+                editor.putString("token", "")
+                editor.putString("renaultId", "")
                 editor.putString("vehicles", "")
                 editor.putBoolean("connected", false)
                 editor.apply()
@@ -67,10 +72,9 @@ class MainActivity : AppCompatActivity() {
                 }
                 else {
                     editor.putString("userName", userName)
-                    editor.putString("password", password)
 
-                    val accountId = connectRenault(this, userName, password)
-                    if (accountId == "err") {
+                    val account = connectRenault(this, userName, password)
+                    if (account == "err") {
                         Toast.makeText(
                             this@MainActivity,
                             "Failed to connect!",
@@ -78,34 +82,32 @@ class MainActivity : AppCompatActivity() {
                         ).show()
                     }
                     else {
-                        val vehicles = getVehicles(this, userName, password, accountId)
-                        if (vehicles == "err") {
-                            Toast.makeText(
-                                this@MainActivity,
-                                "Failed to get vehicle list!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                        else {
-                            editor.putString("accountId", accountId)
-                            editor.putString("vehicles", vehicles)
-                            editor.putBoolean("connected", true)
-                            editor.commit()
+                        val obj = JSONObject(account)
+                        Log.e("testis", obj.getString("id").toString())
 
-                            vinList = createListFromString(vehicles)
+                        val vehicles = obj.getString("vehicles")
+                        val test = obj.getJSONArray("vehicles")
+                        Log.e("testis1", test[0] as String)
 
-                            populateSpinnerVinList(vinList, sharedPreferences.getString("vin", "")!!)
-                            spinner.visibility = VISIBLE
+                        editor.putString("renaultId", obj.getString("id"))
+                        editor.putString("token", obj.getString("token"))
+                        editor.putString("vehicles", vehicles)
+                        editor.putBoolean("connected", true)
+                        editor.commit()
 
-                            button.text = getString(R.string.disconnect)
-                        }
+                        vinList = createListFromString(vehicles)
+
+                        populateSpinnerVinList(vinList, sharedPreferences.getString("vin", "")!!)
+                        spinner.visibility = VISIBLE
+
+                        button.text = getString(R.string.disconnect)
                     }
                 }
             }
         }
 
         refresh.setOnClickListener {
-            val vehicles = getVehicles(this, sharedPreferences.getString("userName", "username")!!, sharedPreferences.getString("password", "password")!!, sharedPreferences.getString("accountId", "123456")!!)
+            val vehicles = getVehicles(this, sharedPreferences.getString("userName", "username")!!, sharedPreferences.getString("password", "password")!!, sharedPreferences.getString("renaultId", "123456")!!)
             if (vehicles == "err") {
                 Toast.makeText(
                     this@MainActivity,

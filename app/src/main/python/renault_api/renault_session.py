@@ -1,11 +1,11 @@
 """Session provider for interaction with Renault servers."""
+
 import asyncio
 import logging
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 import aiohttp
+from marshmallow.schema import Schema
 
 from . import gigya
 from . import kamereon
@@ -24,7 +24,6 @@ from .gigya.exceptions import GigyaResponseException
 from .kamereon import models
 from renault_api.helpers import get_api_keys
 
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -34,10 +33,10 @@ class RenaultSession:
     def __init__(
         self,
         websession: aiohttp.ClientSession,
-        locale: Optional[str] = None,
-        country: Optional[str] = None,
-        locale_details: Optional[Dict[str, str]] = None,
-        credential_store: Optional[CredentialStore] = None,
+        locale: str | None = None,
+        country: str | None = None,
+        locale_details: dict[str, str] | None = None,
+        credential_store: CredentialStore | None = None,
     ) -> None:
         """Initialise RenaultSession."""
         self._gigya_lock = asyncio.Lock()
@@ -65,6 +64,26 @@ class RenaultSession:
         )
         credential = Credential(response.get_session_cookie())
         self._credentials[gigya.GIGYA_LOGIN_TOKEN] = credential
+
+    @property
+    def login_token(self) -> str | None:
+        """Return the current Gigya login token.
+
+        This token is obtained from the password on `login`, and is used to
+        mint JWTs (access tokens) without re-supplying the password. Store it
+        securely instead of the password, and restore it with `set_login_token`
+        (or by pre-populating the credential store) on the next session.
+        """
+        return self._credentials.get_value(gigya.GIGYA_LOGIN_TOKEN)
+
+    def set_login_token(self, login_token: str) -> None:
+        """Restore a Gigya login token obtained from a previous session.
+
+        This avoids storing and reusing the user password: a session restored
+        this way can mint JWTs without ever calling `login`.
+        """
+        self._credentials.clear_keys(gigya.GIGYA_KEYS)
+        self._credentials[gigya.GIGYA_LOGIN_TOKEN] = Credential(login_token)
 
     async def _get_credential(self, key: str) -> str:
         """Get specified credential, or raise RenaultException."""
@@ -146,7 +165,7 @@ class RenaultSession:
                     login_token,
                 )
             except GigyaResponseException as exc:
-                if exc.error_code in [403005, 403013]:  # pragma: no branch
+                if exc.error_code in [403005, 403013]:
                     self._credentials.clear_keys(gigya.GIGYA_KEYS)
                 raise NotAuthenticatedException("Authentication expired.") from exc
             else:
@@ -155,7 +174,12 @@ class RenaultSession:
                 return jwt
 
     async def http_request(
-        self, method: str, endpoint: str, json: Optional[Dict[str, Any]] = None
+        self,
+        method: str,
+        endpoint: str,
+        json: dict[str, Any] | None = None,
+        *,
+        schema: Schema | None = None,
     ) -> models.KamereonResponse:
         """GET to specified endpoint."""
         url = (await self._get_kamereon_root_url()) + endpoint
@@ -168,6 +192,7 @@ class RenaultSession:
             gigya_jwt=await self._get_jwt(),
             params=params,
             json=json,
+            schema=schema,
         )
 
     async def get_person(self) -> models.KamereonPersonResponse:
@@ -213,7 +238,7 @@ class RenaultSession:
         account_id: str,
         vin: str,
         endpoint: str,
-        params: Optional[Dict[str, str]] = None,
+        params: dict[str, str] | None = None,
         *,
         adapter_type: str = "kca",
     ) -> models.KamereonVehicleDataResponse:
@@ -253,7 +278,7 @@ class RenaultSession:
         account_id: str,
         vin: str,
         endpoint: str,
-        attributes: Dict[str, Any],
+        attributes: dict[str, Any],
         *,
         adapter_type: str = "kca",
     ) -> models.KamereonVehicleDataResponse:

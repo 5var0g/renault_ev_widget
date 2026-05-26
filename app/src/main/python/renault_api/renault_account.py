@@ -1,8 +1,6 @@
 """Client for Renault API."""
+
 import logging
-from typing import Dict
-from typing import List
-from typing import Optional
 
 import aiohttp
 
@@ -11,7 +9,6 @@ from .exceptions import RenaultException
 from .kamereon import models
 from .renault_session import RenaultSession
 from .renault_vehicle import RenaultVehicle
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,12 +19,12 @@ class RenaultAccount:
     def __init__(
         self,
         account_id: str,
-        session: Optional[RenaultSession] = None,
-        websession: Optional[aiohttp.ClientSession] = None,
-        locale: Optional[str] = None,
-        country: Optional[str] = None,
-        locale_details: Optional[Dict[str, str]] = None,
-        credential_store: Optional[CredentialStore] = None,
+        session: RenaultSession | None = None,
+        websession: aiohttp.ClientSession | None = None,
+        locale: str | None = None,
+        country: str | None = None,
+        locale_details: dict[str, str] | None = None,
+        credential_store: CredentialStore | None = None,
     ) -> None:
         """Initialise Renault account."""
         self._account_id = account_id
@@ -35,7 +32,7 @@ class RenaultAccount:
         if session:
             self._session = session
         else:
-            if websession is None:  # pragma: no cover
+            if websession is None:
                 raise RenaultException(
                     "`websession` is required if session is not provided."
                 )
@@ -63,14 +60,14 @@ class RenaultAccount:
             self.account_id,
         )
 
-    async def get_api_vehicles(self) -> List[RenaultVehicle]:
+    async def get_api_vehicles(self) -> list[RenaultVehicle]:
         """Get vehicle proxies."""
         response = await self.get_vehicles()
-        if response.vehicleLinks is None:  # pragma: no cover
+        if response.vehicleLinks is None:
             raise ValueError("response.accounts is None")
-        result: List[RenaultVehicle] = []
+        result: list[RenaultVehicle] = []
         for vehicle in response.vehicleLinks:
-            if vehicle.vin is None:  # pragma: no cover
+            if vehicle.vin is None:
                 continue
             result.append(
                 RenaultVehicle(
