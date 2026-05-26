@@ -1,5 +1,6 @@
 package com.example.renault_app
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
@@ -65,15 +66,14 @@ fun getRenaultData(context: Context) {
             timestamp = jObject.getString("timestamp")
             chargingRemainingTime = jObject.getInt("chargingRemainingTime")
 
-            try {
-                chargingInstantaneousPower = jObject.getInt("chargingInstantaneousPower")
-            }
-            catch (e: Exception) {
-                chargingInstantaneousPower = 0
+            chargingInstantaneousPower = try {
+                jObject.getInt("chargingInstantaneousPower")
+            } catch (_: Exception) {
+                0
             }
 
             timestamp = timestamp.replace("T", " ")
-            timestampShort = formatDateFromString("HH:mm dd.MM.", timestamp)
+            timestampShort = formatDateFromString(timestamp)
 
         } catch (e: PyException){
             e.printStackTrace()
@@ -115,11 +115,11 @@ fun getVehicles(context: Context, username: String, password: String, accountId:
     return "err"
 }
 
-private fun formatDateFromString(outputFormat: String?, inputDate: String?): String {
+private fun formatDateFromString(inputDate: String?): String {
         val parsed: Date?
         var outputDate = ""
         val dfInput = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault())
-        val dfOutput = SimpleDateFormat(outputFormat, Locale.getDefault())
+        val dfOutput = SimpleDateFormat("HH:mm dd.MM.", Locale.getDefault())
         try {
             parsed = inputDate?.let { dfInput.parse(it) }
             val calendar = Calendar.getInstance()
@@ -128,13 +128,12 @@ private fun formatDateFromString(outputFormat: String?, inputDate: String?): Str
             }
             calendar.add(Calendar.HOUR, 1)
             outputDate = dfOutput.format(calendar.time)
-        } catch (e: ParseException) {
+        } catch (_: ParseException) {
         }
         return outputDate
 }
 
+@SuppressLint("SimpleDateFormat")
 private fun getCurrentTime(): String {
-    val format = SimpleDateFormat("HH:mm")
-
-    return format.format(Date())
+    return SimpleDateFormat("HH:mm").format(Date())
 }

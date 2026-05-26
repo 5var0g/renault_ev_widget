@@ -1,5 +1,19 @@
 <resources>
-    <string name="app_name">Renault API</string>
+    <string name="app_name">ChargeTile</string>
     <string name="add_widget">Add widget</string>
     <string name="app_widget_description">This is an app widget description</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connect">Connect</string>
+    <string name="appwidget_battery_level">appwidget_battery_level</string>
+    <string name="no_value">-- %</string>
+    <string name="appwidget_battery_autonomy">appwidget_battery_autonomy</string>
+    <string name="km">-- km</string>
+    <string name="appwidget_battery_charging_status">appwidget_battery_charging_status</string>
+    <string name="charging">Charging</string>
+    <string name="appwidget_battery_charging_stat">appwidget_battery_charging_stat</string>
+    <string name="_0_min_0_kw">0 min / 0 kW</string>
+    <string name="appwidget_timestamp">appwidget_timestamp</string>
+    <string name="empty_time">--:--.--. / --:--</string>
+    <string name="refresh">refresh</string>
+    <string name="charging_dot">charging_dot</string>
 </resources>

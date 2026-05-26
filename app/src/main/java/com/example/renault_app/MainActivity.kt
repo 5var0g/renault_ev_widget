@@ -24,13 +24,14 @@ class MainActivity : AppCompatActivity() {
         val userNameEdt = findViewById<EditText>(R.id.idEdtUserName)
         val passwordEdt = findViewById<EditText>(R.id.idEdtPassword)
         val button = findViewById<Button>(R.id.idBtn)
+        val refresh = findViewById<Button>(R.id.idBtnRefresh)
         val spinner = findViewById<Spinner>(R.id.idVinSpinner)
         var vinList: Array<String> = arrayOf("0")
 
         userNameEdt.setText(sharedPreferences.getString("userName", null))
 
         if(sharedPreferences.getBoolean("connected", false)){
-            button.text = "Disconnect"
+            button.text = getString(R.string.disconnect)
 
             val vehicleListString = sharedPreferences.getString("vehicles", "")
             if(vehicleListString != ""){
@@ -38,6 +39,8 @@ class MainActivity : AppCompatActivity() {
                 populateSpinnerVinList(vinList, sharedPreferences.getString("vin", "")!!)
                 spinner.visibility = VISIBLE
             }
+
+            refresh.visibility = VISIBLE
         }
 
         button.setOnClickListener {
@@ -47,8 +50,8 @@ class MainActivity : AppCompatActivity() {
                 editor.putString("accountId", "")
                 editor.putString("vehicles", "")
                 editor.putBoolean("connected", false)
-                editor.commit()
-                button.text = "Connect"
+                editor.apply()
+                button.text = getString(R.string.connect)
                 spinner.visibility = GONE
 
             } else {
@@ -76,7 +79,7 @@ class MainActivity : AppCompatActivity() {
                     }
                     else {
                         val vehicles = getVehicles(this, userName, password, accountId)
-                        if (accountId == "err") {
+                        if (vehicles == "err") {
                             Toast.makeText(
                                 this@MainActivity,
                                 "Failed to get vehicle list!",
@@ -94,10 +97,30 @@ class MainActivity : AppCompatActivity() {
                             populateSpinnerVinList(vinList, sharedPreferences.getString("vin", "")!!)
                             spinner.visibility = VISIBLE
 
-                            button.text = "Disconnect"
+                            button.text = getString(R.string.disconnect)
                         }
                     }
                 }
+            }
+        }
+
+        refresh.setOnClickListener {
+            val vehicles = getVehicles(this, sharedPreferences.getString("userName", "username")!!, sharedPreferences.getString("password", "password")!!, sharedPreferences.getString("accountId", "123456")!!)
+            if (vehicles == "err") {
+                Toast.makeText(
+                    this@MainActivity,
+                    "Failed to get vehicle list!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            else {
+                editor.putString("vehicles", vehicles)
+                editor.commit()
+
+                vinList = createListFromString(vehicles)
+
+                populateSpinnerVinList(vinList, sharedPreferences.getString("vin", "")!!)
+                spinner.visibility = VISIBLE
             }
         }
 
@@ -140,7 +163,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun populateSpinnerVinList(vinList: Array<String>, selectedVin: String) {
-        var spinner: Spinner = findViewById(R.id.idVinSpinner)
+        val spinner: Spinner = findViewById(R.id.idVinSpinner)
         val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, vinList)
         spinner.adapter = arrayAdapter
 

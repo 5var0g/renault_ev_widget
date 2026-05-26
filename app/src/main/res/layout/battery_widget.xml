@@ -1,91 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/widget_layout"
-    style="@style/Widget.Renault_app.AppWidget.Container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@style/Theme.Renault_app.AppWidgetContainer"
-    android:layout_marginBottom="0dp"
-    android:clickable="true"
-    android:layout_marginRight="2dp">
+    android:padding="16dp"
+    android:background="@drawable/widget_background"
+    android:clickable="true">
 
+    <!-- Top right refresh icon -->
+    <!--ImageView
+        android:id="@+id/refresh"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:alpha="0.75"
+        android:contentDescription="@string/refresh"
+        android:padding="2dp"
+        android:src="@drawable/ic_refresh" /-->
+
+    <!-- Battery percentage -->
     <TextView
         android:id="@+id/appwidget_battery_level"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="appwidget_battery_level"
-        android:text="-- %"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold|italic"
-        android:layout_marginTop="10dp"
-        android:layout_marginLeft="15dp"/>
+        android:text="@string/no_value"
+        android:textColor="@android:color/white"
+        android:textSize="34sp"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="-0.03" />
 
+    <!-- Range -->
     <TextView
         android:id="@+id/appwidget_battery_autonomy"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/appwidget_battery_level"
-        android:layout_marginTop="1dp"
-        android:contentDescription="appwidget_battery_autonomy"
-        android:text="-- km"
-        android:textColor="@color/white"
-        android:textSize="24sp"
-        android:textStyle="bold|italic"
-        android:layout_marginLeft="15dp"/>
+        android:layout_below="@id/appwidget_battery_level"
+        android:layout_marginTop="-4dp"
+        android:text="@string/km"
+        android:textColor="#D0D0D0"
+        android:textSize="18sp"
+        android:fontFamily="sans-serif-medium" />
 
-    <TextView
-        android:id="@+id/appwidget_battery_charging_status"
+    <!-- Charging status -->
+    <LinearLayout
+        android:id="@+id/charging_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/appwidget_battery_autonomy"
-        android:layout_alignStart="@+id/appwidget_battery_autonomy"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="1dp"
-        android:contentDescription="appwidget_battery_charging_status"
-        android:text="Charging"
-        android:textColor="@color/white"
-        android:textSize="12sp"
-        android:textStyle="bold|italic"
-        android:visibility="gone" />
+        android:layout_below="@id/appwidget_battery_autonomy"
+        android:layout_marginTop="10dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        tools:ignore="UseCompoundDrawables">
 
+        <ImageView
+            android:id="@+id/appwidget_battery_charging_dot"
+            android:layout_width="8dp"
+            android:layout_height="8dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="6dp"
+            android:contentDescription="@string/charging_dot"
+            android:src="@drawable/charging_dot" />
+
+        <TextView
+            android:id="@+id/appwidget_battery_charging_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/charging"
+            android:textColor="#7CFF8B"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium" />
+    </LinearLayout>
+
+    <!-- Charging details -->
     <TextView
         android:id="@+id/appwidget_battery_charging_stat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/appwidget_battery_charging_status"
-        android:layout_alignStart="@+id/appwidget_battery_level"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="1dp"
-        android:contentDescription="appwidget_battery_charging_stat"
-        android:text="0 min / 0 kW"
-        android:textColor="@color/white"
+        android:layout_below="@id/charging_container"
+        android:layout_marginTop="3dp"
+        android:text="@string/_0_min_0_kw"
+        android:textColor="#A8A8A8"
         android:textSize="12sp"
-        android:textStyle="bold|italic"
-        android:visibility="gone"
-        android:layout_marginLeft="15dp"/>
+        android:visibility="visible"
+        android:fontFamily="sans-serif" />
 
+    <!-- Last updated -->
     <TextView
         android:id="@+id/appwidget_timestamp"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="15dp"
-        android:layout_marginBottom="12dp"
-        android:contentDescription="appwidget_timestamp"
-        android:text="--:--.--. / --:--"
-        android:textColor="#4E4E4E"
-        android:textSize="10sp" />
+        android:text="@string/empty_time"
+        android:textColor="#707070"
+        android:textSize="9sp"
+        android:fontFamily="sans-serif"
+        tools:ignore="SmallSp" />
 
-    <ImageView
-        android:id="@+id/refresh"
-        android:layout_width="25dp"
-        android:layout_height="25dp"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentRight="true"
-        android:layout_marginTop="4dp"
-        android:layout_marginRight="4dp"
-        android:src="@drawable/ic_stat_name" >
-
-    </ImageView>
 </RelativeLayout>
