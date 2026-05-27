@@ -1,5 +1,6 @@
 package com.example.renault_app
 
+import android.annotation.SuppressLint
 import android.content.Context
 import com.chaquo.python.PyException
 import com.chaquo.python.Python
@@ -55,7 +56,7 @@ fun getRenaultData(context: Context) {
         val module = py.getModule("getStat")
 
         try {
-            val apiResponse = module.callAttr("get_stat", sharedPreferences.getString("userName", ""), sharedPreferences.getString("password", ""), sharedPreferences.getString("accountId", ""), sharedPreferences.getString("vin", "")).toString()
+            val apiResponse = module.callAttr("get_stat",sharedPreferences.getString("renaultId", ""), sharedPreferences.getString("token",""), sharedPreferences.getString("vin", "")).toString()
 
             val jObject = JSONObject("{$apiResponse}")
             batteryLevel = jObject.getString("batteryLevel")
@@ -65,15 +66,14 @@ fun getRenaultData(context: Context) {
             timestamp = jObject.getString("timestamp")
             chargingRemainingTime = jObject.getInt("chargingRemainingTime")
 
-            try {
-                chargingInstantaneousPower = jObject.getInt("chargingInstantaneousPower")
-            }
-            catch (e: Exception) {
-                chargingInstantaneousPower = 0
+            chargingInstantaneousPower = try {
+                jObject.getInt("chargingInstantaneousPower")
+            } catch (_: Exception) {
+                0
             }
 
             timestamp = timestamp.replace("T", " ")
-            timestampShort = formatDateFromString("HH:mm dd.MM.", timestamp)
+            timestampShort = formatDateFromString(timestamp)
 
         } catch (e: PyException){
             e.printStackTrace()
@@ -83,7 +83,7 @@ fun getRenaultData(context: Context) {
     }
 }
 
-fun connectRenault(context: Context, username: String, password: String): String {
+fun connectRenault(context: Context, username: String?, password: String?): String {
     if (!Python.isStarted()) {
         Python.start(AndroidPlatform(context))
     }
@@ -91,7 +91,7 @@ fun connectRenault(context: Context, username: String, password: String): String
     val module = py.getModule("getStat")
 
     try {
-        return module.callAttr("get_key", username, password).toString()
+        return module.callAttr("login", username, password).toString()
     } catch (e: PyException) {
         e.printStackTrace()
     }
@@ -99,7 +99,7 @@ fun connectRenault(context: Context, username: String, password: String): String
     return "err"
 }
 
-fun getVehicles(context: Context, username: String, password: String, accountId: String): String {
+fun getVehicles(context: Context, renaultId: String?, token: String?): String {
     if (!Python.isStarted()) {
         Python.start(AndroidPlatform(context))
     }
@@ -107,7 +107,7 @@ fun getVehicles(context: Context, username: String, password: String, accountId:
     val module = py.getModule("getStat")
 
     try {
-        return module.callAttr("get_vehicles", username, password, accountId).toString()
+        return module.callAttr("get_vehicles", renaultId, token).toString()
     } catch (e: PyException) {
         e.printStackTrace()
     }
@@ -115,11 +115,11 @@ fun getVehicles(context: Context, username: String, password: String, accountId:
     return "err"
 }
 
-private fun formatDateFromString(outputFormat: String?, inputDate: String?): String {
+private fun formatDateFromString(inputDate: String?): String {
         val parsed: Date?
         var outputDate = ""
         val dfInput = SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.getDefault())
-        val dfOutput = SimpleDateFormat(outputFormat, Locale.getDefault())
+        val dfOutput = SimpleDateFormat("HH:mm dd.MM.", Locale.getDefault())
         try {
             parsed = inputDate?.let { dfInput.parse(it) }
             val calendar = Calendar.getInstance()
@@ -128,13 +128,12 @@ private fun formatDateFromString(outputFormat: String?, inputDate: String?): Str
             }
             calendar.add(Calendar.HOUR, 1)
             outputDate = dfOutput.format(calendar.time)
-        } catch (e: ParseException) {
+        } catch (_: ParseException) {
         }
         return outputDate
 }
 
+@SuppressLint("SimpleDateFormat")
 private fun getCurrentTime(): String {
-    val format = SimpleDateFormat("HH:mm")
-
-    return format.format(Date())
+    return SimpleDateFormat("HH:mm").format(Date())
 }

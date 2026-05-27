@@ -8,6 +8,7 @@ import android.content.Intent
 import android.graphics.Color
 import android.view.View
 import android.widget.RemoteViews
+import androidx.core.graphics.toColorInt
 
 const val WIDGET_SYNC = "WIDGET_SYNC"
 
@@ -66,7 +67,7 @@ class BatteryWidget : AppWidgetProvider() {
                 )
                 else if (batteryLevel.toInt() <= 20) views.setTextColor(
                     R.id.appwidget_battery_level,
-                    Color.parseColor("#FFA500")
+                    "#FFA500".toColorInt()
                 )
                 else views.setTextColor(R.id.appwidget_battery_level, Color.WHITE)
             }
@@ -75,8 +76,8 @@ class BatteryWidget : AppWidgetProvider() {
             if(chargingStatus == "1.0")views.setViewVisibility(R.id.appwidget_battery_charging_stat,View.VISIBLE)
             else views.setViewVisibility(R.id.appwidget_battery_charging_stat, View.GONE)
 
-            if (plugStatus(plugStatus, chargingStatus) != "") views.setViewVisibility(R.id.appwidget_battery_charging_status, View.VISIBLE)
-            else views.setViewVisibility(R.id.appwidget_battery_charging_status, View.GONE)
+            if (plugStatus(plugStatus, chargingStatus) != "") views.setViewVisibility(R.id.charging_container, View.VISIBLE)
+            else views.setViewVisibility(R.id.charging_container, View.GONE)
 
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, views)

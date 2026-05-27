@@ -1,4 +1,5 @@
 """Kamereon enums."""
+
 from enum import Enum
 
 
@@ -11,6 +12,10 @@ class ChargeState(Enum):
     WAITING_FOR_CURRENT_CHARGE = 0.3
     ENERGY_FLAP_OPENED = 0.4
     CHARGE_IN_PROGRESS = 1.0
+    V2G_CHARGING_WAITING = -1.3
+    V2L_CONNECTED = -1.4
+    V2G_DISCHARGING = -1.5
+    V2G_CHARGING_NORMAL = -1.6
     # This next is more accurately "not charging" (<= ZE40) or "error" (ZE50).
     CHARGE_ERROR = -1.0
     UNAVAILABLE = -1.1
@@ -23,3 +28,10 @@ class PlugState(Enum):
     PLUGGED = 1
     PLUG_ERROR = -1
     PLUG_UNKNOWN = -2147483648
+
+
+class AssetPictureSize(Enum):
+    """Enum for the asset picture size."""
+
+    SMALL = 0
+    LARGE = 1

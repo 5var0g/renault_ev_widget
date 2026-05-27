@@ -1,10 +1,8 @@
 """CLI function for a vehicle."""
+
 import re
 from typing import Any
-from typing import Dict
-from typing import List
-from typing import Optional
-from typing import Tuple
+from typing import cast
 
 import aiohttp
 import click
@@ -15,8 +13,9 @@ from renault_api.cli import renault_vehicle
 from renault_api.kamereon.helpers import DAYS_OF_WEEK
 from renault_api.kamereon.models import ChargeDaySchedule
 from renault_api.kamereon.models import ChargeSchedule
+from renault_api.kamereon.models import KamereonVehicleChargingSettingsData
+from renault_api.kamereon.schemas import KamereonVehicleChargingSettingsDataSchema
 from renault_api.renault_vehicle import RenaultVehicle
-
 
 _DAY_SCHEDULE_REGEX = re.compile(
     "(?P<prefix>T?)"
@@ -27,6 +26,7 @@ _DAY_SCHEDULE_REGEX = re.compile(
     ","
     "(?P<duration>[0-9]+)"
 )
+_HOURS_PER_DAY = 24
 
 
 @click.group()
@@ -39,7 +39,7 @@ def schedule() -> None:
 @click.pass_obj
 @helpers.coro_with_websession
 async def show(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
@@ -47,66 +47,115 @@ async def show(
     vehicle = await renault_vehicle.get_vehicle(
         websession=websession, ctx_data=ctx_data
     )
-    response = await vehicle.get_charging_settings()
+    endpoint_definition = await vehicle.get_endpoint_definition("charge-schedule")
+    response = await vehicle.get_charge_schedule()
+    if endpoint_definition.mode == "kcm-settings":
+        _show_kcm_settings(response)
+    else:  # default
+        _show_kca(response)
 
-    # Display mode
-    click.echo(f"Mode: {response.mode}")
-    if not response.schedules:  # pragma: no cover
+
+def _show_kca(response: dict[str, Any]) -> None:
+    """Display charge schedules (basic)."""
+    calendar = response["calendar"]
+    schedule_table: list[list[str]] = []
+    for day in DAYS_OF_WEEK:
+        day_data = calendar[day][0]
+        start_time = day_data["startTime"]
+        end_time = str(
+            int(day_data["startTime"])
+            + int(day_data["duration"] * 100 / 60)
+            + (day_data["duration"] % 60)
+        )
+        schedule_table.append(
+            [
+                day.capitalize(),
+                helpers.get_display_value(
+                    f"T{start_time[0:2]}:{start_time[2:4]}Z", "tztime"
+                ),
+                helpers.get_display_value(
+                    f"T{end_time[0:2]}:{end_time[2:4]}Z", "tztime"
+                ),
+                day_data["duration"],
+                day_data["activationState"],
+            ]
+        )
+
+    headers = ["Day", "Start time", "End time", "Duration", "Active"]
+    click.echo(tabulate(schedule_table, headers=headers))
+
+
+def _show_kcm_settings(response: dict[str, Any]) -> None:
+    """Display charge schedules (alternate)."""
+    click.echo(f"Mode: {response['chargeModeRq'].capitalize()}")
+    click.echo(f"Charge Time Start: {response['chargeTimeStart']}")
+    click.echo(f"Charge Duration in minutes: {response['chargeDuration']}")
+    click.echo(
+        f"Preconditioning temperature in °C: {response['preconditioningTemperature']}"
+    )
+    click.echo(
+        f"Preconditioning Steering Wheel? {response['preconditioningHeatedStrgWheel']}"
+    )
+    click.echo(
+        f"Preconditioning Left Seat? {response['preconditioningHeatedLeftSeat']}"
+    )
+    click.echo(
+        f"Preconditioning Right Seat? {response['preconditioningHeatedRightSeat']}"
+    )
+    if not response["programs"]:
         click.echo("\nNo schedules found.")
         return
 
-    for schedule in response.schedules:
-        click.echo(
-            f"\nSchedule ID: {schedule.id}{' [Active]' if schedule.activated else ''}"
+    for idx, program in enumerate(response["programs"]):
+        active = (
+            " [Status=Active]"
+            if program["programActivationStatus"]
+            else " [Status=Inactive]"
+        )
+        type = " [Type=" + program["programType"] + "]"
+        departure_time = (
+            " [DepartureTime=" + program.get("programDepartureTime", "N/A") + "]"
         )
 
-        headers = [
-            "Day",
-            "Start time",
-            "End time",
-            "Duration",
-        ]
+        click.echo(f"\nSchedule ID: {idx}{active}{type}{departure_time}")
+
+        headers = ["Day", "Active"]
         click.echo(
             tabulate(
-                [_format_charge_schedule(schedule, key) for key in DAYS_OF_WEEK],
+                [
+                    [key.capitalize(), program[f"programActivation{key.capitalize()}"]]
+                    for key in DAYS_OF_WEEK
+                ],
                 headers=headers,
             )
         )
 
 
-def _format_charge_schedule(schedule: ChargeSchedule, key: str) -> List[str]:
-    details: Optional[ChargeDaySchedule] = getattr(schedule, key)
-    if not details:  # pragma: no cover
-        return [key.capitalize(), "-", "-", "-"]
-    return [
-        key.capitalize(),
-        helpers.get_display_value(details.startTime, "tztime"),
-        helpers.get_display_value(details.get_end_time(), "tztime"),
-        helpers.get_display_value(details.duration, "minutes"),
-    ]
-
-
 async def _get_schedule(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     websession: aiohttp.ClientSession,
     id: int,
-) -> Tuple[RenaultVehicle, List[ChargeSchedule], ChargeSchedule]:
+) -> tuple[RenaultVehicle, list[ChargeSchedule], ChargeSchedule]:
     """Get the given schedules activated-flag to given state."""
     vehicle = await renault_vehicle.get_vehicle(
         websession=websession, ctx_data=ctx_data
     )
-    response = await vehicle.get_charging_settings()
+    response_data = await vehicle._get_vehicle_data("charging-settings")
+    response = cast(
+        KamereonVehicleChargingSettingsData,
+        response_data.get_attributes(KamereonVehicleChargingSettingsDataSchema),
+    )
 
-    if not response.schedules:  # pragma: no cover
+    if not response.schedules:
         raise ValueError("No schedules found.")
 
-    schedule = next(  # pragma: no branch
+    schedule = next(
         (schedule for schedule in response.schedules if id == schedule.id), None
     )
     if schedule:
         return (vehicle, response.schedules, schedule)
 
-    raise IndexError(f"Schedule id {id} not found.")  # pragma: no cover
+    raise IndexError(f"Schedule id {id} not found.")
 
 
 @schedule.command()
@@ -118,7 +167,7 @@ async def _get_schedule(
 @click.pass_obj
 @helpers.coro_with_websession
 async def set(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     id: int,
     websession: aiohttp.ClientSession,
@@ -140,7 +189,7 @@ async def set(
 @click.pass_obj
 @helpers.coro_with_websession
 async def activate(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     id: int,
     websession: aiohttp.ClientSession,
@@ -161,7 +210,7 @@ async def activate(
 @click.pass_obj
 @helpers.coro_with_websession
 async def deactivate(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     id: int,
     websession: aiohttp.ClientSession,
@@ -183,7 +232,7 @@ def update_settings(
 ) -> None:
     """Update charging settings."""
     for day in DAYS_OF_WEEK:
-        if day in kwargs:  # pragma: no branch
+        if day in kwargs:
             day_value = kwargs.pop(day)
 
             if day_value == "clear":
@@ -199,28 +248,28 @@ def update_settings(
                 )
 
 
-def _parse_day_schedule(raw: str) -> Tuple[str, int]:
+def _parse_day_schedule(raw: str) -> tuple[str, int]:
     match = _DAY_SCHEDULE_REGEX.match(raw)
-    if not match:  # pragma: no cover
+    if not match:
         raise ValueError(
             f"Invalid specification for charge schedule: `{raw}`. "
             "Should be of the form HH:MM,DURATION or THH:MMZ,DURATION"
         )
 
     hours = int(match.group("hours"))
-    if hours > 23:  # pragma: no cover
+    if hours >= _HOURS_PER_DAY:
         raise ValueError(
             f"Invalid specification for charge schedule: `{raw}`. "
             "Hours should be less than 24."
         )
     minutes = int(match.group("minutes"))
-    if (minutes % 15) != 0:  # pragma: no cover
+    if (minutes % 15) != 0:
         raise ValueError(
             f"Invalid specification for charge schedule: `{raw}`. "
             "Minutes should be a multiple of 15."
         )
     duration = int(match.group("duration"))
-    if (duration % 15) != 0:  # pragma: no cover
+    if (duration % 15) != 0:
         raise ValueError(
             f"Invalid specification for charge schedule: `{raw}`. "
             "Duration should be a multiple of 15."
@@ -229,7 +278,7 @@ def _parse_day_schedule(raw: str) -> Tuple[str, int]:
         formatted_start_time = f"T{hours:02g}:{minutes:02g}Z"
     elif not (match.group("prefix") or match.group("suffix")):
         formatted_start_time = helpers.convert_minutes_to_tztime(hours * 60 + minutes)
-    else:  # pragma: no cover
+    else:
         raise ValueError(
             f"Invalid specification for charge schedule: `{raw}`. "
             "If provided, both T and Z must be set."

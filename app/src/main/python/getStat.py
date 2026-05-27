@@ -2,16 +2,16 @@
 
 import aiohttp
 import asyncio
+import json
 
 from renault_api.renault_client import RenaultClient
 
-async def getStat(username, password, accountId, vin):
+async def getStat(accountId, token, vin):
    async with aiohttp.ClientSession() as websession:
       client = RenaultClient(websession=websession, locale="fr_FR")
-      await client.session.login(username, password)
+      client.session.set_login_token(token)
 
       account = await client.get_api_account(accountId)
-
       vehicle = await account.get_api_vehicle(vin)
       response_battery = await vehicle.get_battery_status()
 
@@ -22,13 +22,26 @@ async def getKameo(username, password):
       client = RenaultClient(websession=websession, locale="fr_FR")
       await client.session.login(username, password)
 
-      response = await client.get_person()
-      return response.accounts[0].accountId
+      person = await client.get_person()
+      account = await client.get_api_account(person.accounts[0].accountId)
+      vehicles = await account.get_vehicles()
+      vehicle_list = []
+
+      for x in vehicles.vehicleLinks:
+         vehicle_list.append(x.vin)
+
+      data = {
+         "id": person.accounts[0].accountId,
+         "token": client.session.login_token,
+         "vehicles": vehicle_list
+      }
+      
+      return json.dumps(data)
    
-async def getVehicles(username, password, accountId):
+async def getVehicles(accountId, token):
    async with aiohttp.ClientSession() as websession:
       client = RenaultClient(websession=websession, locale="fr_FR")
-      await client.session.login(username, password)
+      client.session.set_login_token(token)
 
       account = await client.get_api_account(accountId)
       vehicles = await account.get_vehicles()
@@ -40,14 +53,14 @@ async def getVehicles(username, password, accountId):
 
       return vehicle_list
 
-def get_stat(username, password, accountId, vin):
-   loop = asyncio.get_event_loop()
-   return loop.run_until_complete(getStat(username, password, accountId, vin))
-
-def get_key(username, password):
+def login(username, password):
    loop = asyncio.get_event_loop()
    return loop.run_until_complete(getKameo(username, password))
 
-def get_vehicles(username, password, accountId):
+def get_vehicles(accountId, token):
    loop = asyncio.get_event_loop()
-   return loop.run_until_complete(getVehicles(username, password, accountId))
+   return loop.run_until_complete(getVehicles(accountId, token))
+
+def get_stat(accountId, token, vin):
+   loop = asyncio.get_event_loop()
+   return loop.run_until_complete(getStat(accountId, token, vin))

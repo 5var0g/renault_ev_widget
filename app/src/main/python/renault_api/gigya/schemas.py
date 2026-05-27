@@ -1,9 +1,9 @@
 """Gigya schemas."""
+
 import marshmallow_dataclass
 
 from . import models
 from renault_api.models import BaseSchema
-
 
 GigyaResponseSchema = marshmallow_dataclass.class_schema(
     models.GigyaResponse, base_schema=BaseSchema

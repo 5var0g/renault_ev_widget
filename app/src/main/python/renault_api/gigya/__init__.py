@@ -1,17 +1,19 @@
 """Gigya API."""
+
 import logging
+from json import JSONDecodeError
 from typing import Any
 from typing import cast
-from typing import Dict
 
 import aiohttp
 from marshmallow.schema import Schema
 
 from . import models
 from . import schemas
+from .exceptions import GigyaException
 
 GIGYA_JWT = "gigya_jwt"
-GIGYA_LOGIN_TOKEN = "gigya_login_token"  # noqa: S105
+GIGYA_LOGIN_TOKEN = "gigya_login_token"  # nosec
 GIGYA_PERSON_ID = "gigya_person_id"
 GIGYA_KEYS = [GIGYA_JWT, GIGYA_LOGIN_TOKEN, GIGYA_PERSON_ID]
 
@@ -22,20 +24,17 @@ async def request(
     websession: aiohttp.ClientSession,
     method: str,
     url: str,
-    data: Dict[str, Any],
+    data: dict[str, Any],
     schema: Schema,
 ) -> models.GigyaResponse:
     """Send request to Gigya."""
     async with websession.request(method, url, data=data) as http_response:
         response_text = await http_response.text()
-        # Disable logging on Gigya, to avoid unnecessary exposure.
-        # _LOGGER.debug(
-        #    "Received Gigya response %s on %s: %s",
-        #    http_response.status,
-        #    url,
-        #    response_text,
-        # )
-        gigya_response: models.GigyaResponse = schema.loads(response_text)
+        # Don't log on Gigya, to avoid unnecessary exposure.
+        try:
+            gigya_response: models.GigyaResponse = schema.loads(response_text)
+        except JSONDecodeError as err:
+            raise GigyaException("Gigya responded with invalid JSON") from err
         # Check for Gigya error
         gigya_response.raise_for_error_code()
         # Check for HTTP error

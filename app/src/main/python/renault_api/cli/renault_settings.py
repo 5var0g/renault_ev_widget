@@ -1,9 +1,8 @@
 """Singletons for the CLI."""
+
 import os
 from textwrap import TextWrapper
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 import aiohttp
 import click
@@ -22,10 +21,10 @@ CREDENTIAL_PATH = "~/.credentials/renault-api.json"
 
 async def set_options(
     websession: aiohttp.ClientSession,
-    ctx_data: Dict[str, Any],
-    locale: Optional[str],
-    account: Optional[str],
-    vin: Optional[str],
+    ctx_data: dict[str, Any],
+    locale: str | None,
+    account: str | None,
+    vin: str | None,
 ) -> None:
     """Set configuration keys."""
     credential_store: CredentialStore = ctx_data["credential_store"]
@@ -43,14 +42,14 @@ async def set_options(
         credential_store[CONF_VIN] = Credential(vin)
 
 
-def display_settings(ctx_data: Dict[str, Any]) -> None:
+def display_settings(ctx_data: dict[str, Any]) -> None:
     """Get the current configuration keys."""
     credential_store: CredentialStore = ctx_data["credential_store"]
     wrapper = TextWrapper(width=80)
-    items = list(
+    items = [
         [key, "\n".join(wrapper.wrap(credential_store.get_value(key) or "-"))]
         for key in credential_store._store.keys()
-    )
+    ]
     click.echo(tabulate(items, headers=["Key", "Value"]))
 
 

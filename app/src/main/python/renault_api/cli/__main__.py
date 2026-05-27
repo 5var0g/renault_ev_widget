@@ -1,4 +1,5 @@
 """Command-line interface."""
+
 import errno
 import json
 import logging
@@ -6,8 +7,6 @@ import os
 from datetime import datetime
 from io import TextIOWrapper
 from typing import Any
-from typing import Dict
-from typing import Optional
 
 import aiohttp
 import click
@@ -21,7 +20,6 @@ from . import renault_vehicle
 from .charge import commands as charge_commands
 from .hvac import commands as hvac_commands
 from renault_api.credential_store import FileCredentialStore
-
 
 _WARNING_DEBUG_ENABLED = (
     "Debug output enabled. Logs may contain personally identifiable "
@@ -40,7 +38,7 @@ def _check_for_debug(debug: bool, log: bool) -> None:
             # create directory
             try:
                 os.makedirs("logs")
-            except OSError as e:  # pragma: no cover
+            except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise
 
@@ -82,9 +80,9 @@ def main(
     debug: bool,
     log: bool,
     json: bool,
-    locale: Optional[str] = None,
-    account: Optional[str] = None,
-    vin: Optional[str] = None,
+    locale: str | None = None,
+    account: str | None = None,
+    vin: str | None = None,
 ) -> None:
     """Main entry point for the Renault CLI."""
     ctx.ensure_object(dict)
@@ -97,7 +95,7 @@ def main(
         ctx.obj["locale"] = locale
     if account:
         ctx.obj["account"] = account
-    if vin:  # pragma: no branch
+    if vin:
         ctx.obj["vin"] = vin
 
 
@@ -109,7 +107,7 @@ main.add_command(hvac_commands.hvac)
 @click.pass_obj
 @helpers.coro_with_websession
 async def accounts(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
@@ -123,7 +121,7 @@ async def accounts(
 @click.pass_obj
 @helpers.coro_with_websession
 async def login(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     user: str,
     password: str,
@@ -148,11 +146,11 @@ def reset() -> None:
 @click.pass_obj
 @helpers.coro_with_websession
 async def set(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
-    locale: Optional[str] = None,
-    account: Optional[str] = None,
-    vin: Optional[str] = None,
+    locale: str | None = None,
+    account: str | None = None,
+    vin: str | None = None,
     websession: aiohttp.ClientSession,
 ) -> None:
     """Store specified settings into credential store."""
@@ -161,7 +159,7 @@ async def set(
 
 @main.command()
 @click.pass_obj
-def settings(ctx_data: Dict[str, Any]) -> None:
+def settings(ctx_data: dict[str, Any]) -> None:
     """Display the current configuration keys."""
     renault_settings.display_settings(ctx_data)
 
@@ -170,7 +168,7 @@ def settings(ctx_data: Dict[str, Any]) -> None:
 @click.pass_obj
 @helpers.coro_with_websession
 async def status(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
@@ -182,7 +180,7 @@ async def status(
 @click.pass_obj
 @helpers.coro_with_websession
 async def vehicles(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
@@ -194,7 +192,7 @@ async def vehicles(
 @click.pass_obj
 @helpers.coro_with_websession
 async def vehicle(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
@@ -206,12 +204,29 @@ async def vehicle(
 @click.pass_obj
 @helpers.coro_with_websession
 async def contracts(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     websession: aiohttp.ClientSession,
 ) -> None:
     """Display vehicle contracts."""
     await renault_vehicle.display_contracts(websession, ctx_data)
+
+
+@main.command(name="horn")
+@click.pass_obj
+@helpers.coro_with_websession
+async def horn(
+    ctx_data: dict[str, Any],
+    websession: aiohttp.ClientSession,
+) -> None:
+    """Start horn."""
+    vehicle = await renault_vehicle.get_vehicle(
+        websession=websession, ctx_data=ctx_data
+    )
+    await vehicle.start_horn()
+    click.echo(
+        "Request to horn 3 times sent. It may take a few seconds to take effect."
+    )
 
 
 @main.group()
@@ -225,7 +240,7 @@ def http() -> None:
 @click.pass_obj
 @helpers.coro_with_websession
 async def http_get(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     endpoint: str,
     websession: aiohttp.ClientSession,
@@ -240,7 +255,7 @@ async def http_get(
 @click.pass_obj
 @helpers.coro_with_websession
 async def http_post_file(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     endpoint: str,
     json_body: TextIOWrapper,
@@ -258,7 +273,7 @@ async def http_post_file(
 @click.pass_obj
 @helpers.coro_with_websession
 async def http_post(
-    ctx_data: Dict[str, Any],
+    ctx_data: dict[str, Any],
     *,
     endpoint: str,
     json_body: str,
@@ -270,5 +285,23 @@ async def http_post(
     )
 
 
-if __name__ == "__main__":  # pragma: no cover
+@main.command(name="lights")
+@click.pass_obj
+@helpers.coro_with_websession
+async def lights(
+    ctx_data: dict[str, Any],
+    websession: aiohttp.ClientSession,
+) -> None:
+    """Start lights."""
+    vehicle = await renault_vehicle.get_vehicle(
+        websession=websession, ctx_data=ctx_data
+    )
+    await vehicle.start_lights()
+    click.echo(
+        "Request to flash lights 3 times has been sent. "
+        "It may take a few seconds to take effect."
+    )
+
+
+if __name__ == "__main__":
     main(prog_name="renault-api")

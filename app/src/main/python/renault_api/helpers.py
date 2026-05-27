@@ -1,9 +1,8 @@
 """Helpers for Renault API."""
+
 import asyncio
 import functools
 import logging
-from typing import Dict
-from typing import Optional
 
 import aiohttp
 
@@ -13,6 +12,12 @@ from .const import CONF_GIGYA_URL
 from .const import CONF_KAMEREON_APIKEY
 from .const import CONF_KAMEREON_URL
 from .const import LOCALE_BASE_URL
+from .const import MAX_SOC_MIN
+from .const import MAX_SOC_TARGET
+from .const import MIN_SOC_MIN
+from .const import MIN_SOC_TARGET
+from .const import SOC_STEP
+from .exceptions import InvalidInputError
 from .exceptions import RenaultException
 
 _LOGGER = logging.getLogger(__package__)
@@ -21,8 +26,8 @@ _LOGGER = logging.getLogger(__package__)
 async def get_api_keys(
     locale: str,
     force_load: bool = False,
-    websession: Optional[aiohttp.ClientSession] = None,
-) -> Dict[str, str]:
+    websession: aiohttp.ClientSession | None = None,
+) -> dict[str, str]:
     """Get the API keys for specified locale.
 
     Args:
@@ -50,7 +55,7 @@ async def get_api_keys(
             raise RenaultException("aiohttp_session is not set.")
 
         url = f"{LOCALE_BASE_URL}/configuration/android/config_{locale}.json"
-        async with websession.get(url) as response:  # pragma: no cover
+        async with websession.get(url) as response:
             try:
                 response.raise_for_status()
             except aiohttp.ClientResponseError as exc:
@@ -76,7 +81,7 @@ async def get_api_keys(
 
 def create_aiohttp_closed_event(
     websession: aiohttp.ClientSession,
-) -> asyncio.Event:  # pragma: no cover
+) -> asyncio.Event:
     """Work around aiohttp issue that doesn't properly close transports on exit.
 
     See https://github.com/aio-libs/aiohttp/issues/1925#issuecomment-639080209
@@ -129,3 +134,16 @@ def create_aiohttp_closed_event(
         all_is_lost.set()
 
     return all_is_lost
+
+
+def validate_battery_soc_input(*, min: int, target: int) -> None:
+    if min < MIN_SOC_MIN or min > MAX_SOC_MIN or min % SOC_STEP != 0:
+        raise InvalidInputError(
+            f"Minimum state of charge level must be between {MIN_SOC_MIN} and "
+            f"{MAX_SOC_MIN} with a step of {SOC_STEP}."
+        )
+    if target < MIN_SOC_TARGET or target > MAX_SOC_TARGET or target % SOC_STEP != 0:
+        raise InvalidInputError(
+            f"Target state of charge level must be between {MIN_SOC_TARGET} and "
+            f"{MAX_SOC_TARGET} with a step of {SOC_STEP}."
+        )

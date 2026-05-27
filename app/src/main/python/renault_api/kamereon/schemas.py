@@ -1,9 +1,9 @@
 """Kamereon schemas."""
+
 import marshmallow_dataclass
 
 from . import models
 from renault_api.models import BaseSchema
-
 
 KamereonResponseSchema = marshmallow_dataclass.class_schema(
     models.KamereonResponse, base_schema=BaseSchema
@@ -37,6 +37,13 @@ KamereonVehicleBatteryStatusDataSchema = marshmallow_dataclass.class_schema(
     models.KamereonVehicleBatteryStatusData, base_schema=BaseSchema
 )()
 
+KamereonVehicleBatterySocDataSchema = marshmallow_dataclass.class_schema(
+    models.KamereonVehicleBatterySocData, base_schema=BaseSchema
+)()
+
+KamereonVehicleTyrePressureDataSchema = marshmallow_dataclass.class_schema(
+    models.KamereonVehicleTyrePressureData, base_schema=BaseSchema
+)()
 
 KamereonVehicleLocationDataSchema = marshmallow_dataclass.class_schema(
     models.KamereonVehicleLocationData, base_schema=BaseSchema
@@ -107,6 +114,9 @@ KamereonVehicleHvacSessionsDataSchema = marshmallow_dataclass.class_schema(
     models.KamereonVehicleHvacSessionsData, base_schema=BaseSchema
 )()
 
+KamereonVehicleBatterySocActionDataSchema = marshmallow_dataclass.class_schema(
+    models.KamereonVehicleBatterySocActionData, base_schema=BaseSchema
+)()
 
 KamereonVehicleHvacStartActionDataSchema = marshmallow_dataclass.class_schema(
     models.KamereonVehicleHvacStartActionData, base_schema=BaseSchema
